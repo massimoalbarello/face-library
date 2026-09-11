@@ -23,6 +23,9 @@ The app incorporates or links the following open-source dependencies. License co
 | Bun runtime | 1.4.0 | MIT; runtime third-party notices: https://github.com/oven-sh/bun/blob/main/LICENSE.md |
 | SimpleWebAuthn server/browser | Versions pinned by `bun.lock` | MIT, dependency license copies in `vendor/AUTH-LICENSES/` |
 | PDF Signer authentication and UI reference | `5ff828f` | MIT, `vendor/PDF-SIGNER-LICENSE` |
+| D3 zoom, selection and quadtree | 3.0.0 / 3.0.0 / 3.0.1 | ISC, including transitive D3 modules in `vendor/MAP-LICENSES/` |
+| umap-js | 1.4.0 | Apache-2.0 per bundled LICENSE (package metadata says MIT); `vendor/MAP-LICENSES/` |
+| UMAP math dependencies | Versions pinned by `bun.lock` | MIT/ISC; license copies in `vendor/MAP-LICENSES/` |
 
 The build embeds a CA trust bundle from the development system for authenticated HTTPS model
 downloads. Its PEM comments identify the included certificate authorities. This bundle should

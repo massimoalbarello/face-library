@@ -38,6 +38,7 @@ const esc = (v) =>
       ],
   );
 const faceName = (f) => f.name || `Face ${f.id ?? f.face_id}`;
+let cleanupMap = null;
 let status = {},
   signedIn = false,
   routeVersion = 0,
@@ -91,6 +92,7 @@ function errorText(error) {
   return esc(error.message || error);
 }
 async function renderLogin() {
+  cleanupMap?.(); cleanupMap = null;
   FaceCamera.close();
   dialog.close();
   root.innerHTML = `<div class="auth-page"><header class="auth-header"><a class="brand" href="#photos"><span class="brand-mark">${icon("person")}</span>face library<span class="brand-dot">.</span></a><span class="auth-private">${icon("lock")} Your photos stay on your server</span></header>
@@ -192,6 +194,10 @@ function shell(active) {
   updateNotice();
 }
 function updateNotice() {
+  const photoCount = root.querySelector("#photo-count"), faceCount = root.querySelector("#face-count"), disk = root.querySelector("#disk-info");
+  if (photoCount) photoCount.textContent = status.photos ?? 0;
+  if (faceCount) faceCount.textContent = status.faces ?? 0;
+  if (disk) disk.textContent = `${status.views ?? 0} face views · ${status.freeBytes ? (status.freeBytes / 1073741824).toFixed(1) + " GB free" : "Persistent storage"}`;
   const n = root.querySelector("#engine-notice");
   if (n)
     n.innerHTML = status.modelError
@@ -366,7 +372,7 @@ async function facesPage(version) {
   );
   if (version !== routeVersion) return;
   root.querySelector("#page").innerHTML =
-    `<header class="page-head"><div><p class="eyebrow">Workspace</p><h1>Faces</h1><p class="sub">A place for everyone in your photos.</p></div><button id="adjust">${icon("settings")} Adjust grouping</button></header><div class="toolbar"><strong>${data.total} face${data.total === 1 ? "" : "s"} <span class="dim">&nbsp; ${status.views ?? 0} views in your library</span></strong><input id="search" type="search" placeholder="Find a person…" aria-label="Find a person" value="${esc(search)}"></div>${data.items.length ? `<div class="grid">${data.items.map(faceCard).join("")}</div>` : search ? '<section class="empty"><h2>No matching faces</h2><p>Try another name or face number.</p></section>' : empty("faces")}${pager(data.total)}`;
+    `<header class="page-head"><div><p class="eyebrow">Workspace</p><h1>Faces</h1><p class="sub">A place for everyone in your photos.</p></div><div class="actions"><a href="#map" class="map-back">Embedding map</a><button id="adjust">${icon("settings")} Adjust grouping</button></div></header><div class="toolbar"><strong>${data.total} face${data.total === 1 ? "" : "s"} <span class="dim">&nbsp; ${status.views ?? 0} views in your library</span></strong><input id="search" type="search" placeholder="Find a person…" aria-label="Find a person" value="${esc(search)}"></div>${data.items.length ? `<div class="grid">${data.items.map(faceCard).join("")}</div>` : search ? '<section class="empty"><h2>No matching faces</h2><p>Try another name or face number.</p></section>' : empty("faces")}${pager(data.total)}`;
   root.querySelector("#adjust").onclick = groupingDialog;
   const input = root.querySelector("#search");
   let t;
@@ -419,7 +425,7 @@ async function facePage(id, version) {
   );
   const cover = f.cover;
   root.querySelector("#page").innerHTML =
-    `<div class="crumb"><a href="#faces">Faces</a>${icon("arrow")}<span>${esc(faceName(f))}</span></div><header class="page-head detail-head"><div class="face-title-row">${cover ? `<img class="face-avatar" src="/assets/views/${cover}" alt="">` : ""}<div><h1>${esc(faceName(f))}</h1><p class="sub">${f.view_count} face view${f.view_count === 1 ? "" : "s"}${f.name ? " · Named & confirmed" : ""}</p></div></div><div class="actions"><button id="rename">${icon("edit")} ${f.name ? "Rename" : "Add a name"}</button><button id="merge">${icon("merge")} Merge face</button></div></header><div class="toolbar"><strong>Face views</strong><span>Select views to move them to another face or split them out.</span></div><div id="selection-bar"></div><div class="view-grid">${f.views.map((v) => `<article class="view-card ${selected.has(v.id) ? "selected" : ""}" data-view="${v.id}"><label><img src="/assets/views/${v.id}" alt="Face view from ${esc(v.filename)}" loading="lazy"><input type="checkbox" value="${v.id}" aria-label="Select view from ${esc(v.filename)}" ${selected.has(v.id) ? "checked" : ""}>${v.manual ? `<span class="locked" style="color:white;filter:drop-shadow(0 1px 3px #000)" title="Confirmed view">${icon("lock")}</span>` : ""}</label><a href="#photo/${v.photo_id}" title="Open ${esc(v.filename)}">${esc(v.filename)} ↗</a><button class="preview-choice quiet small" data-preview="${v.id}" ${v.id === cover ? "disabled" : ""}>${icon(v.id === cover ? "check" : "photo")} ${v.id === cover ? "Current preview" : "Use as preview"}</button></article>`).join("")}</div>${pager(f.view_count, 120)}<h2 class="section-title">Photos they appear in</h2><div class="grid">${f.photos.map((p) => photoCard({ ...p, status: "ready", faces: [{ id: f.id, name: f.name }] })).join("")}</div>`;
+    `<div class="crumb"><a href="#faces">Faces</a>${icon("arrow")}<span>${esc(faceName(f))}</span></div><header class="page-head detail-head"><div class="face-title-row">${cover ? `<img class="face-avatar" src="/assets/views/${cover}" alt="">` : ""}<div><h1>${esc(faceName(f))}</h1><p class="sub">${f.view_count} face view${f.view_count === 1 ? "" : "s"}${f.name ? " · Named & confirmed" : ""}</p></div></div><div class="actions"><a class="map-back" href="#map/${f.id}">Embedding map</a><button id="rename">${icon("edit")} ${f.name ? "Rename" : "Add a name"}</button><button id="merge">${icon("merge")} Merge face</button></div></header><div class="toolbar"><strong>Face views</strong><span>Select views to move them to another face or split them out.</span></div><div id="selection-bar"></div><div class="view-grid">${f.views.map((v) => `<article class="view-card ${selected.has(v.id) ? "selected" : ""}" data-view="${v.id}"><label><img src="/assets/views/${v.id}" alt="Face view from ${esc(v.filename)}" loading="lazy"><input type="checkbox" value="${v.id}" aria-label="Select view from ${esc(v.filename)}" ${selected.has(v.id) ? "checked" : ""}>${v.manual ? `<span class="locked" style="color:white;filter:drop-shadow(0 1px 3px #000)" title="Confirmed view">${icon("lock")}</span>` : ""}</label><a href="#photo/${v.photo_id}" title="Open ${esc(v.filename)}">${esc(v.filename)} ↗</a><button class="preview-choice quiet small" data-preview="${v.id}" ${v.id === cover ? "disabled" : ""}>${icon(v.id === cover ? "check" : "photo")} ${v.id === cover ? "Current preview" : "Use as preview"}</button></article>`).join("")}</div>${pager(f.view_count, 120)}<h2 class="section-title">Photos they appear in</h2><div class="grid">${f.photos.map((p) => photoCard({ ...p, status: "ready", faces: [{ id: f.id, name: f.name }] })).join("")}</div>`;
   root.querySelectorAll("[data-preview]").forEach(
     (button) =>
       (button.onclick = async () => {
@@ -646,6 +652,7 @@ function mergeDialog(f) {
   );
 }
 async function render(options = {}) {
+  cleanupMap?.(); cleanupMap = null;
   const version = ++routeVersion;
   if (!signedIn) {
     renderLogin();
@@ -664,7 +671,7 @@ async function render(options = {}) {
     shell(
       type === "settings"
         ? "settings"
-        : type === "faces" || type === "face"
+        : type === "faces" || type === "face" || type === "map"
           ? "faces"
           : "photos",
     );
@@ -675,6 +682,11 @@ async function render(options = {}) {
     else if (type === "photo" && /^\d+$/.test(hash[1]))
       await photoPage(hash[1], version);
     else if (type === "faces") await facesPage(version);
+    else if (type === "map") cleanupMap = FaceMap.mount(root.querySelector("#page"), {
+      faceId: /^\d+$/.test(hash[1] || "") ? Number(hash[1]) : undefined,
+      onMove: (id) => moveDialog([id]),
+      onExpired: () => { signedIn = false; renderLogin(); },
+    });
     else if (type === "settings") await settingsPage();
     else await photosPage(version);
     if (options.focus) {
@@ -730,6 +742,7 @@ setInterval(async () => {
     updateNotice();
     if (
       signature !== lastStats &&
+      !location.hash.startsWith("#map") &&
       !document.querySelector("dialog[open]") &&
       !uploading &&
       selected.size === 0 &&

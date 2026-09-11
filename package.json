@@ -12,14 +12,17 @@
     "build:local": "BUILD_TARGET=host bun run build",
     "check:types": "tsc --noEmit",
     "check:all": "bun run check:types && bun run --filter @repo/frontend build",
-    "test": "bun test apps/backend/test",
+    "test": "bun test apps/backend/test apps/frontend/test",
     "test:browser": "bun scripts/test-browser.ts",
     "deploy:nibrun": "bun scripts/deploy-nibrun.ts"
   },
   "devDependencies": {
     "@types/bun": "1.4.0",
-    "typescript": "7.0.2",
-    "playwright-core": "1.63.0"
+    "@types/d3-quadtree": "3.0.6",
+    "@types/d3-selection": "3.0.11",
+    "@types/d3-zoom": "3.0.8",
+    "playwright-core": "1.63.0",
+    "typescript": "7.0.2"
   },
   "packageManager": "bun@1.4.0"
 }

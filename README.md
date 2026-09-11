@@ -13,6 +13,9 @@ photos, and correct any matches. Sign in with a passkey.
   threshold. Confirmed assignments survive automatic regrouping.
 - **Camera uploads** work from the Add photos dialog, with a native camera picker on mobile and
   live preview, capture and retake on desktop.
+- **Embedding map** displays every face view on a zoomable 2D similarity map with thumbnail icons,
+  colors for assigned people, filtering and links to the original photos. Open it from Faces or
+  any person's page; select a view to inspect or correct its assignment.
 
 Photos, embeddings and passkeys live on the instance's persistent filesystem. YuNet/SFace run
 locally on the CPU, including rotated-face detection; no external face-recognition service is used.
@@ -88,5 +91,10 @@ GitHub Actions builds and tests the Linux executable on every pull request and m
 Successful main builds update the **nibrun-latest** release used by the deploy button, including
 SHA-256 checksums and license notices. See [operations](docs/OPERATIONS.md),
 [model decisions](docs/MODEL-DECISION.md) and [third-party licenses](THIRD-PARTY.md).
+
+The embedding map uses D3 canvas interactions and UMAP in a browser worker. It fits up to 2,000
+distinct embeddings and projects any remaining views onto the same map. All views are included;
+thumbnail decoding is bounded to the visible area. Two-dimensional distances are approximate
+and do not replace the cosine matching threshold. Details: [embedding map](docs/EMBEDDING-MAP.md).
 
 MIT licensed, like PDF Signer. Dependencies retain their own licenses.

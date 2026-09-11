@@ -243,6 +243,48 @@ public:
              {std::to_string(value)});
       reply(r, {{"threshold", value}});
     });
+    server.Get("/api/views/embeddings", [this](const Request &q, Response &r) {
+      auto cursor = [&](const char *key, int64_t fallback) -> int64_t {
+        if (!q.has_param(key)) return fallback;
+        const auto value = q.get_param_value(key);
+        if (value.empty() || value.size() > 16 ||
+            !std::all_of(value.begin(), value.end(), [](unsigned char c) { return std::isdigit(c); }))
+          throw HttpError(400, "Invalid embedding cursor");
+        try { return std::stoll(value); }
+        catch (...) { throw HttpError(400, "Invalid embedding cursor"); }
+      };
+      std::lock_guard<std::mutex> l(mutex);
+      const auto after = cursor("after", 0);
+      const auto through = cursor("through", db.query(
+          "SELECT COALESCE(max(id),0) id FROM views")[0]["id"].get<int64_t>());
+      // Bound every response rather than materializing the entire vector table.
+      DB::Stmt st(db, "SELECT v.id,v.face_id,v.photo_id,f.name,p.filename,e.vector "
+                      "FROM views v JOIN embeddings e ON e.view_id=v.id "
+                      "JOIN faces f ON f.id=v.face_id JOIN photos p ON p.id=v.photo_id "
+                      "WHERE v.id>? AND v.id<=? ORDER BY v.id LIMIT 500",
+                  json::array({after, through}));
+      json items = json::array();
+      int64_t next = after;
+      while (st.step() == SQLITE_ROW) {
+        if (sqlite3_column_bytes(st.s, 5) != 128 * sizeof(float))
+          throw HttpError(500, "Invalid stored embedding");
+        float vector[128];
+        std::memcpy(vector, sqlite3_column_blob(st.s, 5), sizeof(vector));
+        json values = json::array();
+        for (float value : vector) {
+          if (!std::isfinite(value)) throw HttpError(500, "Invalid stored embedding");
+          values.push_back(value);
+        }
+        next = sqlite3_column_int64(st.s, 0);
+        items.push_back({{"id", next}, {"face_id", sqlite3_column_int64(st.s, 1)},
+          {"photo_id", sqlite3_column_int64(st.s, 2)},
+          {"name", reinterpret_cast<const char *>(sqlite3_column_text(st.s, 3))},
+          {"filename", reinterpret_cast<const char *>(sqlite3_column_text(st.s, 4))},
+          {"embedding", std::move(values)}});
+      }
+      reply(r, {{"items", items}, {"through", through}, {"next", next},
+                {"done", items.size() < 500}, {"dimensions", 128}});
+    });
     server.Post("/api/regroup", [this](const Request &, Response &r) {
       std::lock_guard<std::mutex> l(mutex);
       require_ready();

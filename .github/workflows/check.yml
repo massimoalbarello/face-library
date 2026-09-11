@@ -63,7 +63,7 @@ jobs:
         run: |
           chmod +x release/face-library
           cp LICENSE THIRD-PARTY.md release/
-          tar -czf release/third-party-notices.tar.gz vendor/*LICENSE* vendor/AUTH-LICENSES vendor/OPENCV-THIRD-PARTY
+          tar -czf release/third-party-notices.tar.gz vendor/*LICENSE* vendor/AUTH-LICENSES vendor/MAP-LICENSES vendor/OPENCV-THIRD-PARTY
           cd release
           sha256sum face-library > SHA256SUMS
       - name: Publish nibrun binary

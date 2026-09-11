@@ -52,6 +52,8 @@ try {
     join(fixtures, 'lena.jpg'), video, join(out, 'passkey')], env);
   await run([process.execPath, 'tests/browser/preview-browser.mjs', base,
     fixtures, rotations, join(out, 'preview'), join(out, 'passkey/test-credential.json')], env);
+  await run([process.execPath, 'tests/browser/embedding-map.mjs', base,
+    fixtures, rotations, join(out, 'map'), join(out, 'passkey/test-credential.json')], env);
   console.log(`Browser checks passed. Local test output: ${out}`);
 } finally {
   server.kill('SIGTERM');

@@ -18,3 +18,9 @@ const scripts = await Bun.build({
   target: 'browser',
 });
 if (!scripts.success) throw new AggregateError(scripts.logs, 'Invalid browser script');
+
+for (const name of ['embedding-map', 'embedding-worker']) {
+  const result = await Bun.build({ entrypoints: [join(frontend, `src/${name}.ts`)],
+    outdir, naming: `${name}.js`, target: 'browser', format: 'iife', minify: true });
+  if (!result.success) throw new AggregateError(result.logs, `Could not build ${name}`);
+}
