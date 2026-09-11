@@ -14,6 +14,7 @@ The app incorporates or links the following open-source dependencies. License co
 | SQLite | 3.50.4 | Public domain, https://sqlite.org/copyright.html |
 | Mbed TLS | 3.6.4 | Apache-2.0 or GPL-2.0-or-later; used under Apache-2.0, `vendor/MBEDTLS-LICENSE` |
 | libjpeg-turbo | supplied by OpenCV 4.10.0 | BSD-style/IJG/zlib notices in `vendor/OPENCV-THIRD-PARTY/` |
+| OpenJPEG | supplied by OpenCV 4.10.0 in the Docker build | BSD-2-Clause, `vendor/OPENCV-THIRD-PARTY/libopenjp2-LICENSE` |
 | libpng | supplied by OpenCV 4.10.0 | libpng license in `vendor/OPENCV-THIRD-PARTY/` |
 | zlib | supplied by OpenCV 4.10.0 | zlib license in `vendor/OPENCV-THIRD-PARTY/` |
 | Protocol Buffers | supplied by OpenCV 4.10.0 | BSD-3-Clause, `vendor/OPENCV-THIRD-PARTY/` |
