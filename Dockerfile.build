@@ -7,6 +7,7 @@ RUN curl -fsSL https://github.com/opencv/opencv/archive/refs/tags/4.10.0.tar.gz 
 RUN cmake -S opencv-4.10.0 -B opencv-build \
  -DCMAKE_BUILD_TYPE=MinSizeRel -DCMAKE_INSTALL_PREFIX=/opt/opencv \
  -DBUILD_SHARED_LIBS=OFF -DBUILD_LIST=core,imgproc,imgcodecs,dnn,objdetect \
+ -DBUILD_opencv_gapi=OFF -DWITH_ADE=OFF \
  -DBUILD_TESTS=OFF -DBUILD_PERF_TESTS=OFF -DBUILD_EXAMPLES=OFF \
  -DBUILD_opencv_apps=OFF -DBUILD_JAVA=OFF -DBUILD_opencv_python3=OFF \
  -DWITH_IPP=OFF -DWITH_ITT=OFF -DWITH_OPENCL=OFF -DWITH_TBB=OFF \
