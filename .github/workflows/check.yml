@@ -1,0 +1,83 @@
+name: Checks and release
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: .bun-version
+      - run: bun install --frozen-lockfile
+      - uses: docker/setup-buildx-action@v3
+      - name: Build and test static C++ engine
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile.build
+          platforms: linux/amd64
+          outputs: type=local,dest=build/core-release
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Compile self-contained app
+        run: bun run build
+        env:
+          CORE_BINARY: build/core-release/face-core
+      - run: bun run check:all
+      - run: bun run test
+      - name: Install browser-test dependencies
+        run: sudo apt-get update -qq && sudo apt-get install -y ffmpeg
+      - run: bun run test:browser
+      - uses: actions/upload-artifact@v7
+        with:
+          name: face-library-linux-x64
+          path: apps/backend/dist/face-library
+          if-no-files-found: error
+
+  publish:
+    needs: check
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    concurrency:
+      group: nibrun-release
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/download-artifact@v8
+        with:
+          name: face-library-linux-x64
+          path: release
+      - name: Prepare release files
+        run: |
+          chmod +x release/face-library
+          cp LICENSE THIRD-PARTY.md release/
+          tar -czf release/third-party-notices.tar.gz vendor/*LICENSE* vendor/AUTH-LICENSES vendor/OPENCV-THIRD-PARTY
+          cd release
+          sha256sum face-library > SHA256SUMS
+      - name: Publish nibrun binary
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          if [ "$(gh api "repos/$GH_REPO/commits/main" --jq .sha)" != "$GITHUB_SHA" ]; then
+            exit 0
+          fi
+          printf 'Built from %s. The deploy button uses this Linux x86_64 binary. Updated after successful checks on main.\n' "$GITHUB_SHA" > release-notes.md
+          if gh release view nibrun-latest >/dev/null 2>&1; then
+            gh release upload nibrun-latest release/* --clobber
+            gh release edit nibrun-latest --prerelease --notes-file release-notes.md
+          else
+            gh release create nibrun-latest release/* --target "$GITHUB_SHA" --title 'Deploy on nibrun' --prerelease --notes-file release-notes.md
+          fi

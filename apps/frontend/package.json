@@ -1,0 +1,12 @@
+{
+  "name": "@repo/frontend",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "bun ../../scripts/build-frontend.ts"
+  },
+  "dependencies": {
+    "@better-auth/passkey": "1.7.4",
+    "better-auth": "1.7.4"
+  }
+}

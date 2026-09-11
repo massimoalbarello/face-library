@@ -1,0 +1,11 @@
+node_modules
+**/node_modules
+**/dist
+build
+data
+release
+.git
+.env*
+*.key
+.nibrun.json
+apps/backend/src/assets.gen.ts

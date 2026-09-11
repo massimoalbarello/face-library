@@ -1,0 +1,8 @@
+#pragma once
+inline constexpr char PAGE[]=R"ASSET(@PAGE@)ASSET";
+inline constexpr char APPJS[]=R"ASSET(@APPJS@)ASSET";
+inline constexpr char STYLE[]=R"ASSET(@STYLE@)ASSET";
+inline constexpr char CACERT[]=R"CERT(@CACERT@)CERT";
+
+inline constexpr char CAMERAJS[]=R"ASSET(@CAMERAJS@)ASSET";
+inline constexpr unsigned char DMSANS[]={@DMSANS_BYTES@};

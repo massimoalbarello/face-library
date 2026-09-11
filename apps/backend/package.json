@@ -1,0 +1,10 @@
+{
+  "name": "@repo/backend",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@better-auth/passkey": "1.7.4",
+    "@ilbertt/better-auth-bun-sql": "0.4.0",
+    "better-auth": "1.7.4"
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "name": "face-library",
+  "version": "1.3.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "bun run build:local && ./apps/backend/dist/face-library",
+    "build": "bun scripts/build.ts",
+    "build:local": "BUILD_TARGET=host bun run build",
+    "check:types": "tsc --noEmit",
+    "check:all": "bun run check:types && bun run --filter @repo/frontend build",
+    "test": "bun test apps/backend/test",
+    "test:browser": "bun scripts/test-browser.ts",
+    "deploy:nibrun": "bun scripts/deploy-nibrun.ts"
+  },
+  "devDependencies": {
+    "@types/bun": "1.4.0",
+    "typescript": "7.0.2",
+    "playwright-core": "1.63.0"
+  },
+  "packageManager": "bun@1.4.0"
+}
